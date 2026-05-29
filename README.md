@@ -1,6 +1,6 @@
 # Snip
 
-Fast, clean URL shortener with click analytics. Live at [snip.vercel.app](https://snip.vercel.app).
+Fast, clean URL shortener with click analytics. Live at [snip-by-mrramissah.vercel.app](https://snip-by-mrramissah.vercel.app).
 
 ## Features
 
