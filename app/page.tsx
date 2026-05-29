@@ -20,6 +20,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
+  const [installPromptExpanded, setInstallPromptExpanded] = useState(false)
   const [mobilePlatform, setMobilePlatform] = useState<'ios' | 'android' | 'other' | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -111,25 +112,50 @@ export default function Home() {
       </header>
 
       {showInstallPrompt && (
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="rounded-3xl border border-edge bg-primary-soft p-4 shadow-sm sm:flex sm:items-start sm:justify-between sm:gap-4">
-            <div>
-              <p className="text-sm font-semibold text-primary">Add Snip to your home screen</p>
-              <p className="mt-2 text-sm text-fore-2 max-w-2xl">Install this shortcut on your phone for instant access to link creation.</p>
-              <div className="mt-3 grid gap-2 text-sm text-fore-3">
-                {mobilePlatform === 'ios' ? (
-                  <p>Tap the share icon, then choose <span className="font-semibold text-fore">Add to Home Screen</span>.</p>
-                ) : mobilePlatform === 'android' ? (
-                  <p>Open the browser menu, then choose <span className="font-semibold text-fore">Add to Home screen</span>.</p>
-                ) : (
-                  <>
-                    <p>On iOS: tap the share icon, then choose <span className="font-semibold text-fore">Add to Home Screen</span>.</p>
-                    <p>On Android: open the browser menu, then choose <span className="font-semibold text-fore">Add to Home screen</span>.</p>
-                  </>
-                )}
+        <div className="fixed inset-x-0 bottom-4 z-20 px-4 sm:hidden">
+          <div className="mx-auto max-w-3xl">
+            <div className="rounded-full border border-edge bg-white/95 p-3 shadow-lg backdrop-blur-xl">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-fore">Add Snip to your home screen</p>
+                  <p className="text-xs text-fore-3">Tap to expand the install instruction.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInstallPromptExpanded(prev => !prev)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-edge bg-panel text-fore transition hover:bg-edge/70"
+                  aria-expanded={installPromptExpanded}
+                  aria-label="Toggle install prompt"
+                >
+                  <span className="text-lg">{installPromptExpanded ? '−' : '+'}</span>
+                </button>
               </div>
             </div>
-            <button type="button" onClick={dismissInstallPrompt} className="btn-outline mt-4 sm:mt-0">Dismiss</button>
+
+            {installPromptExpanded && (
+              <div className="mt-3 rounded-3xl border border-edge bg-primary-soft p-4 shadow-lg">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-primary">Add Snip to your home screen</p>
+                    <p className="mt-2 text-sm text-fore-2">Install this shortcut on your phone for instant access to link creation.</p>
+                  </div>
+                  <button type="button" onClick={dismissInstallPrompt} className="btn-outline">Dismiss</button>
+                </div>
+
+                <div className="mt-4 space-y-2 text-sm text-fore-3">
+                  {mobilePlatform === 'ios' ? (
+                    <p>Tap the share icon, then choose <span className="font-semibold text-fore">Add to Home Screen</span>.</p>
+                  ) : mobilePlatform === 'android' ? (
+                    <p>Open the browser menu, then choose <span className="font-semibold text-fore">Add to Home screen</span>.</p>
+                  ) : (
+                    <>
+                      <p>On iOS: tap the share icon, then choose <span className="font-semibold text-fore">Add to Home Screen</span>.</p>
+                      <p>On Android: open the browser menu, then choose <span className="font-semibold text-fore">Add to Home screen</span>.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
