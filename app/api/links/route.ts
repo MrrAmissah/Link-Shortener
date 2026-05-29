@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     try {
       const link = await db.link.create({ data: { slug: customSlug, url } })
       const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? req.nextUrl.origin}/${link.slug}`
-      return NextResponse.json({ slug: link.slug, url: link.url, shortUrl }, { status: 201 })
+      return NextResponse.json({ id: link.id, slug: link.slug, url: link.url, shortUrl }, { status: 201 })
     } catch (err: unknown) {
       if (isPrismaUniqueError(err)) {
         return NextResponse.json({ error: 'That slug is already taken' }, { status: 409 })
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     try {
       const link = await db.link.create({ data: { slug, url } })
       const shortUrl = `${process.env.NEXT_PUBLIC_BASE_URL ?? req.nextUrl.origin}/${link.slug}`
-      return NextResponse.json({ slug: link.slug, url: link.url, shortUrl }, { status: 201 })
+      return NextResponse.json({ id: link.id, slug: link.slug, url: link.url, shortUrl }, { status: 201 })
     } catch (err: unknown) {
       if (isPrismaUniqueError(err)) continue
       throw err

@@ -1,125 +1,248 @@
 import Link from 'next/link'
+import Logo from '../components/Logo'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-async function getLinks() {
-  return db.link.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 20,
-    include: { _count: { select: { clicks: true } } },
-  })
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+async function getOverview() {
+  const [links, totalClicks] = await Promise.all([
+    db.link.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      include: { _count: { select: { clicks: true } } },
+    }),
+    db.click.count(),
+  ])
+
+  // fetch recent clicks (7d)
+  const since = new Date()
+  since.setDate(since.getDate() - 6)
+  const clicks = await db.click.findMany({ where: { createdAt: { gte: since } }, orderBy: { createdAt: 'asc' } })
+
+  return { links, totalClicks, clicks }
+}
+
+function bucketByDay(clicks: { createdAt: Date }[]) {
+  const buckets: Record<string, number> = {}
+  for (let i = 0; i < 7; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    const key = d.toISOString().slice(0, 10)
+    buckets[key] = 0
+  }
+  for (const c of clicks) {
+    const key = c.createdAt.toISOString().slice(0, 10)
+    if (key in buckets) buckets[key]++
+  }
+  return Object.entries(buckets).map(([k, v]) => ({ date: k, count: v }))
+}
+
+function simpleUAParse(ua?: string) {
+  const device = ua && /Mobi|Android/i.test(ua) ? 'Mobile' : 'Desktop'
+  let browser = 'Other'
+  if (ua) {
+    if (/Chrome/i.test(ua) && !/Edg|OPR/i.test(ua)) browser = 'Chrome'
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari'
+    else if (/Firefox/i.test(ua)) browser = 'Firefox'
+    else if (/Edg/i.test(ua)) browser = 'Edge'
+  }
+  return { device, browser }
 }
 
 export default async function Dashboard() {
-  const links = await getLinks()
+  const { links, totalClicks, clicks } = await getOverview()
+
+  const linksCreated = await db.link.count()
+  const activeLinks = linksCreated
+
+  // top link by clicks
+  const withCounts = await db.link.findMany({ include: { _count: { select: { clicks: true } } } })
+  const topLink = withCounts.sort((a, b) => b._count.clicks - a._count.clicks)[0]
+
+  const series = bucketByDay(clicks.map(c => ({ createdAt: c.createdAt })))
+
+  // top referrers
+  const refMap: Record<string, number> = {}
+  const deviceMap: Record<string, number> = {}
+  const browserMap: Record<string, number> = {}
+  const recentActivity = await db.click.findMany({ orderBy: { createdAt: 'desc' }, take: 6 })
+  for (const c of recentActivity) {
+    let host = 'Direct'
+    if (c.referer) {
+      try {
+        host = new URL(c.referer).host
+      } catch {
+        host = c.referer ?? 'Unknown'
+      }
+    }
+    refMap[host] = (refMap[host] || 0) + 1
+    const parsed = simpleUAParse(c.userAgent ?? undefined)
+    deviceMap[parsed.device] = (deviceMap[parsed.device] || 0) + 1
+    browserMap[parsed.browser] = (browserMap[parsed.browser] || 0) + 1
+  }
+
+  const referrers = Object.entries(refMap).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const devices = Object.entries(deviceMap).sort((a, b) => b[1] - a[1])
+  const browsers = Object.entries(browserMap).sort((a, b) => b[1] - a[1])
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="border-b border-edge/70 bg-panel/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2.5">
-            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo text-white shadow-sm select-none hover:bg-indigo-hi transition-colors">
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                <circle cx="4" cy="5.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
-                <circle cx="4" cy="14.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
-                <line x1="6" y1="6.5" x2="17.5" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                <line x1="6" y1="13.5" x2="17.5" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            </Link>
-            <span className="text-sm font-bold text-fore">Snip</span>
-            <span className="hidden rounded-full bg-indigo-soft px-2 py-0.5 text-xs font-semibold text-indigo-dark sm:block">
-              Dashboard
-            </span>
+      <header className="border-b border-edge/70 bg-panel/90">
+        <div className="mx-auto max-w-6xl px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center">
+                <Logo withText={false} />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-fore">Overview</h1>
+                <p className="text-xs text-fore-3">Monitor your links and track performance.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input placeholder="Search links, aliases or destinations..." className="rounded-lg border border-edge px-3 py-2 text-sm text-fore-2" />
+              <div className="rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-fore-2">7d</div>
+              <Link href="/dashboard/links" className="btn-outline">Create Link</Link>
+            </div>
           </div>
-          <Link
-            href="/"
-            className="flex h-8 items-center gap-1.5 rounded-full border border-edge bg-raised px-3 text-xs font-semibold text-fore-3 transition-colors hover:border-indigo/40 hover:text-indigo"
-          >
-            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-              <path d="M10 6H2M2 6l4-4M2 6l4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            New link
-          </Link>
         </div>
       </header>
 
-      <div className="border-b border-edge/40 bg-gradient-to-b from-indigo/5 to-transparent py-8 text-center">
-        <h1 className="text-2xl font-bold text-fore sm:text-3xl">Your Links</h1>
-        <p className="mt-1.5 text-sm text-fore-3">
-          {links.length === 0 ? 'No links yet.' : `${links.length} most recent link${links.length !== 1 ? 's' : ''}`}
-        </p>
-      </div>
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <div className="card card-elevated p-4">
+            <p className="text-xs text-fore-3">Total Clicks</p>
+            <div className="mt-2 text-2xl font-semibold">{totalClicks}</div>
+          </div>
+          <div className="card card-elevated p-4">
+            <p className="text-xs text-fore-3">Links Created</p>
+            <div className="mt-2 text-2xl font-semibold">{linksCreated}</div>
+          </div>
+          <div className="card card-elevated p-4">
+            <p className="text-xs text-fore-3">Active Links</p>
+            <div className="mt-2 text-2xl font-semibold">{activeLinks}</div>
+          </div>
+          <div className="card card-elevated p-4">
+            <p className="text-xs text-fore-3">Top Link</p>
+            <div className="mt-2 text-sm font-semibold text-primary truncate">{topLink ? `${process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'}/${topLink.slug}` : '—'}</div>
+          </div>
+        </div>
 
-      <main className="mx-auto max-w-3xl px-3 py-8 sm:px-4">
-        {links.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-edge bg-panel py-16 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-soft">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M13.5 6.5L10 10M8.5 4.5l1.293-1.293a4.243 4.243 0 016 6L14.5 10.5M11.5 15.5l-1.293 1.293a4.243 4.243 0 01-6-6L5.5 9.5" stroke="#4f46e5" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 card card-elevated p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-fore">Clicks over time</h3>
+              <div className="text-xs text-fore-3">Last 7 days</div>
             </div>
-            <div>
-              <p className="font-semibold text-fore">No links yet</p>
-              <p className="mt-0.5 text-sm text-fore-3">Shorten your first URL to see it here.</p>
-            </div>
-            <Link
-              href="/"
-              className="mt-1 flex h-9 items-center gap-2 rounded-lg bg-indigo px-4 text-sm font-semibold text-white shadow-md shadow-indigo/25 hover:bg-indigo-hi transition-colors"
-            >
-              Create a link
-            </Link>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {links.map((link: Awaited<ReturnType<typeof getLinks>>[number]) => (
-              <div
-                key={link.id}
-                className="flex flex-col gap-2 rounded-xl border border-edge bg-panel px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4"
-              >
-                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <a
-                    href={`/${link.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-mono text-sm font-semibold text-indigo hover:underline truncate"
-                  >
-                    /{link.slug}
-                  </a>
-                  <p className="truncate text-xs text-fore-3">{link.url}</p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="flex items-center gap-1.5 rounded-full bg-indigo-soft px-2.5 py-1 text-xs font-semibold text-indigo-dark">
-                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                      <path d="M6 1v5M6 6l-2.5 2.5M6 6l2.5 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M2 9.5h8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                    </svg>
-                    {link._count.clicks} click{link._count.clicks !== 1 ? 's' : ''}
-                  </div>
-                  <span className="text-xs text-fore-3">{formatDate(link.createdAt)}</span>
-                </div>
+            {series.every(s => s.count === 0) ? (
+              <div className="mt-6 text-center py-12 text-sm text-fore-3">No clicks yet — share a link to see activity here.</div>
+            ) : (
+              <div className="mt-4 h-36">
+                {/* Simple sparkline */}
+                <svg viewBox="0 0 100 36" className="w-full h-full">
+                  {(() => {
+                    const max = Math.max(...series.map(s => s.count), 1)
+                    const points = series.map((s, i) => {
+                      const x = (i / (series.length - 1)) * 100
+                      const y = 36 - (s.count / max) * 32
+                      return `${x},${y}`
+                    })
+                    return <polyline fill="none" stroke="#4F46E5" strokeWidth="2" points={points.join(' ')} />
+                  })()}
+                </svg>
               </div>
-            ))}
+            )}
           </div>
-        )}
+
+          <div className="card card-elevated p-4">
+            <h3 className="text-sm font-semibold text-fore">Top Referrers</h3>
+            <ul className="mt-3 flex flex-col gap-2">
+              {referrers.length === 0 ? (
+                <li className="text-sm text-fore-3">No referrers yet</li>
+              ) : (
+                referrers.map(([host, count]) => (
+                  <li key={host} className="flex items-center justify-between text-sm">
+                    <span className="truncate">{host}</span>
+                    <span className="text-fore-3">{count}</span>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="card card-elevated p-4">
+            <h4 className="text-sm font-semibold text-fore">Top Links</h4>
+            <ul className="mt-3 flex flex-col gap-2">
+              {links.map(l => (
+                <li key={l.id} className="flex items-center justify-between text-sm">
+                  <a href={`/${l.slug}`} className="truncate text-primary">{l.slug}</a>
+                  <span className="text-fore-3">{l._count.clicks}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="card card-elevated p-4">
+            <h4 className="text-sm font-semibold text-fore">Devices</h4>
+            <ul className="mt-3 flex flex-col gap-2 text-sm">
+              {devices.length === 0 ? <li className="text-fore-3">No data</li> : devices.map(([k, v]) => (
+                <li key={k} className="flex items-center justify-between"><span>{k}</span><span className="text-fore-3">{v}</span></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="card card-elevated p-4">
+            <h4 className="text-sm font-semibold text-fore">Browsers</h4>
+            <ul className="mt-3 flex flex-col gap-2 text-sm">
+              {browsers.length === 0 ? <li className="text-fore-3">No data</li> : browsers.map(([k, v]) => (
+                <li key={k} className="flex items-center justify-between"><span>{k}</span><span className="text-fore-3">{v}</span></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 rounded-lg border border-edge bg-panel p-4">
+            <h4 className="text-sm font-semibold text-fore">Recent Activity</h4>
+            <ul className="mt-3 flex flex-col gap-2">
+              {recentActivity.length === 0 ? (
+                <li className="text-sm text-fore-3">No recent activity</li>
+              ) : (
+                recentActivity.map(r => (
+                  <li key={r.id} className="flex items-center justify-between rounded-md border border-edge p-2">
+                    <div className="text-sm text-fore-2">{(() => {
+                      try {
+                        return r.referer ? new URL(r.referer).host : 'Direct'
+                      } catch {
+                        return r.referer ?? 'Unknown'
+                      }
+                    })()}</div>
+                    <div className="text-xs text-fore-3">{new Date(r.createdAt).toLocaleString()}</div>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+
+          <div className="rounded-lg border border-edge bg-panel p-4">
+            <h4 className="text-sm font-semibold text-fore">Quick Actions</h4>
+            <div className="mt-3 flex flex-col gap-2">
+              <Link href="/dashboard/links" className="rounded-lg border border-edge px-3 py-2 text-sm text-fore-2">Manage links</Link>
+              <Link href="/" className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white">Create a link</Link>
+            </div>
+          </div>
+        </div>
       </main>
 
       <footer className="mt-auto border-t border-edge/50 py-5 text-center">
-        <p className="text-xs text-fore-3">
-          Built by{' '}
-          <a
-            href="https://www.linkedin.com/in/prince-kofi-frimpong-amissah/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-indigo hover:underline"
-          >
-            MrrAmissah
-          </a>
-        </p>
+        <p className="text-xs text-fore-3">Built by <a href="https://www.linkedin.com/in/prince-kofi-frimpong-amissah/" target="_blank" rel="noreferrer" className="font-medium text-primary">MrrAmissah</a></p>
       </footer>
     </div>
   )

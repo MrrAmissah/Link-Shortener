@@ -4,6 +4,8 @@ Short links. Real-time analytics. No friction.
 
 **Live at [snipnow.vercel.app](https://snipnow.vercel.app)**
 
+![Snip homepage screenshot](./screenshot-homepage.png)
+
 ---
 
 ## What it does
