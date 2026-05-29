@@ -1,6 +1,6 @@
 # Snip
 
-Fast, clean URL shortener with click analytics. Live at [snip-by-mrramissah.vercel.app](https://snip-by-mrramissah.vercel.app).
+Fast, clean URL shortener with click analytics. Live at [sniplt.vercel.app](https://sniplt.vercel.app).
 
 ## Features
 
@@ -56,7 +56,7 @@ Covers `generateSlug()`, `isValidSlug()`, `isValidUrl()`, and `RESERVED_SLUGS`. 
 |---|---|
 | `DATABASE_URL` | Neon pooled connection string |
 | `DIRECT_URL` | Neon direct/unpooled connection string (for migrations) |
-| `NEXT_PUBLIC_BASE_URL` | Public base URL, e.g. `https://snip.vercel.app` |
+| `NEXT_PUBLIC_BASE_URL` | Public base URL, e.g. `https://sniplt.vercel.app` |
 
 ---
 
