@@ -23,8 +23,13 @@ export default async function Dashboard() {
       <header className="border-b border-edge/70 bg-panel/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2.5">
-            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo text-white text-sm font-bold shadow-sm select-none hover:bg-indigo-hi transition-colors">
-              S
+            <Link href="/" className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo text-white shadow-sm select-none hover:bg-indigo-hi transition-colors">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                <circle cx="4" cy="5.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="4" cy="14.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
+                <line x1="6" y1="6.5" x2="17.5" y2="13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <line x1="6" y1="13.5" x2="17.5" y2="7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
             </Link>
             <span className="text-sm font-bold text-fore">Snip</span>
             <span className="hidden rounded-full bg-indigo-soft px-2 py-0.5 text-xs font-semibold text-indigo-dark sm:block">
