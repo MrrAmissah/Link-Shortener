@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Snip - URL Shortener
 
-## Getting Started
+Production-grade URL shortener with click analytics. No third-party redirects, zero cold-start overhead, built on Neon Postgres.
 
-First, run the development server:
+## Features
+
+- Shorten any http/https URL to a 7-character random slug
+- Optional custom alias (3-30 chars, letters/digits/- and _)
+- Click analytics tracked server-side on every redirect
+- Dashboard showing 20 most recent links with click counts
+- Fire-and-forget click logging via `after()` - never delays the redirect
+- Reserved slug protection (api, dashboard, _next, ...)
+- Collision retry (up to 5 attempts before error)
+- 302 redirect for correct browser behavior
+
+## Tech Stack
+
+| Tool | Purpose |
+|---|---|
+| Next.js 16 (App Router) | Framework |
+| TypeScript | Type safety |
+| Prisma v7 | ORM + migrations |
+| Neon Postgres | Serverless database |
+| Tailwind CSS v4 | Styling |
+| Vitest | Unit tests |
+
+## Run Locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+# fill in DATABASE_URL and DIRECT_URL from your Neon project
+
+npm install
+npx prisma migrate dev --name init
+npm run dev         # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm test
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Covers `generateSlug()`, `isValidSlug()`, `isValidUrl()`, and `RESERVED_SLUGS`. No database calls.
 
-## Learn More
+## Deploy to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push to GitHub
+2. Import the repo in Vercel
+3. Add environment variables: `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_BASE_URL`
+4. Deploy - Prisma generates the client at build time automatically
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Neon pooled connection string |
+| `DIRECT_URL` | Neon direct/unpooled connection string (for migrations) |
+| `NEXT_PUBLIC_BASE_URL` | Public base URL, e.g. `https://your-app.vercel.app` |
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> Built by [MrrAmissah](https://github.com/MrrAmissah)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
