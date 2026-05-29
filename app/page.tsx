@@ -96,15 +96,15 @@ export default function Home() {
   const urlValid = isValidUrl(url.trim())
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-canvas overflow-x-hidden">
       <header className="sticky top-0 z-10 border-b border-edge/70 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <Logo withText />
             <span className="hidden sm:inline product-badge">URL Shortener</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-shrink-0 items-center gap-3">
             <Link href="/dashboard" className="btn-outline">Dashboard</Link>
           </div>
         </div>
@@ -193,9 +193,9 @@ export default function Home() {
                   <label className="block text-xs font-semibold text-fore-3">2. Custom alias <span className="font-normal">(optional)</span></label>
                   <span className="text-xs text-fore-3">3-30 characters</span>
                 </div>
-                <div className="mt-3 flex items-center rounded-2xl border border-edge bg-panel input-dense overflow-hidden">
+                <div className="mt-3 flex min-w-0 items-center rounded-2xl border border-edge bg-panel input-dense overflow-hidden">
                   <span className="px-4 text-sm text-fore-3 select-none bg-panel-muted border-r border-edge/70">{process.env.NEXT_PUBLIC_BASE_URL ?? 'snipnow.vercel.app'}/</span>
-                  <input value={customSlug} onChange={e => setCustomSlug(e.target.value)} placeholder="my-link" className="flex-1 bg-transparent text-sm text-fore outline-none" />
+                  <input value={customSlug} onChange={e => setCustomSlug(e.target.value)} placeholder="my-link" className="flex-1 min-w-0 bg-transparent text-sm text-fore outline-none" />
                 </div>
                 <p className="mt-3 text-sm text-fore-3">Choose a custom ending for your link.</p>
                 {customSlug && !isValidSlug(customSlug) && <div className="mt-2 text-xs text-error">Custom alias must be 3-30 characters: letters, digits, - or _</div>}

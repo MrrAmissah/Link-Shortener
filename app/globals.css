@@ -38,6 +38,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html, body { overflow-x: hidden; }
+
 body {
   background: radial-gradient(circle at 12% 12%, rgba(99,102,241,0.14), transparent 20%),
               radial-gradient(circle at 90% 10%, rgba(124,58,237,0.10), transparent 23%),
