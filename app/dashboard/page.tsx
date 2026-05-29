@@ -93,8 +93,8 @@ export default async function Dashboard() {
     <div className="min-h-screen bg-canvas">
       <header className="border-b border-edge/70 bg-panel/90">
         <div className="mx-auto max-w-6xl px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="flex items-center">
                 <Logo withText={false} />
               </div>
@@ -104,10 +104,10 @@ export default async function Dashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <input placeholder="Search links, aliases or destinations..." className="rounded-lg border border-edge px-3 py-2 text-sm text-fore-2" />
-              <div className="rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-fore-2">7d</div>
-              <Link href="/dashboard/links" className="btn-outline">Create Link</Link>
+            <div className="flex flex-wrap items-center gap-3 justify-end min-w-0">
+              <input placeholder="Search links, aliases or destinations..." className="min-w-0 flex-1 rounded-lg border border-edge px-3 py-2 text-sm text-fore-2" />
+              <div className="flex-shrink-0 rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-fore-2">7d</div>
+              <Link href="/dashboard/links" className="flex-shrink-0 btn-outline">Create Link</Link>
             </div>
           </div>
         </div>

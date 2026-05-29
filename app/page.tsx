@@ -94,6 +94,10 @@ export default function Home() {
     window.localStorage.setItem('snip-install-prompt-dismissed', 'true')
   }
 
+  const baseHost = (process.env.NEXT_PUBLIC_BASE_URL ?? 'snipnow.vercel.app')
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+
   const urlValid = isValidUrl(url.trim())
 
   return (
@@ -220,7 +224,7 @@ export default function Home() {
                   <span className="text-xs text-fore-3">3-30 characters</span>
                 </div>
                 <div className="mt-3 flex min-w-0 items-center rounded-2xl border border-edge bg-panel input-dense overflow-hidden">
-                  <span className="px-4 text-sm text-fore-3 select-none bg-panel-muted border-r border-edge/70">{process.env.NEXT_PUBLIC_BASE_URL ?? 'snipnow.vercel.app'}/</span>
+                  <span className="px-4 text-sm text-fore-3 select-none bg-panel-muted border-r border-edge/70 truncate min-w-0">{baseHost}/</span>
                   <input value={customSlug} onChange={e => setCustomSlug(e.target.value)} placeholder="my-link" className="flex-1 min-w-0 bg-transparent text-sm text-fore outline-none" />
                 </div>
                 <p className="mt-3 text-sm text-fore-3">Choose a custom ending for your link.</p>
@@ -245,7 +249,7 @@ export default function Home() {
 
         <div className="mx-auto max-w-6xl space-y-8 mt-8">
           {result ? (
-            <div className="result-panel">
+            <div className="result-panel grid grid-cols-1 items-center gap-4 sm:grid-cols-[auto_1fr_auto]">
               <div className="icon-badge" style={{ width: 48, height: 48, borderRadius: 12 }}>
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#EEF2FF"/><path d="M7 12l3 3 7-7" stroke="#4F46E5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
