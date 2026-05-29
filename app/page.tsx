@@ -128,7 +128,7 @@ export default function Home() {
                 Custom alias <span className="normal-case font-normal text-fore-3">(optional)</span>
               </label>
               <div className="flex items-center rounded-xl border border-edge bg-canvas shadow-sm transition-all focus-within:border-indigo/60 focus-within:ring-2 focus-within:ring-indigo/15 focus-within:bg-panel hover:border-edge-hi">
-                <span className="shrink-0 pl-4 text-xs text-fore-3 select-none">sniplt.vercel.app/</span>
+                <span className="shrink-0 pl-4 text-xs text-fore-3 select-none">snipnow.vercel.app/</span>
                 <input
                   id="custom-slug"
                   type="text"
