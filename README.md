@@ -1,10 +1,10 @@
-# Snip - URL Shortener
+# Snip
 
-Production-grade URL shortener with click analytics. No third-party redirects, zero cold-start overhead, built on Neon Postgres.
+Fast, clean URL shortener with click analytics. Live at [snip.vercel.app](https://snip.vercel.app).
 
 ## Features
 
-- Shorten any http/https URL to a 7-character random slug
+- Shorten any http/https URL to a 7-character slug
 - Optional custom alias (3-30 chars, letters/digits/- and _)
 - Click analytics tracked server-side on every redirect
 - Dashboard showing 20 most recent links with click counts
@@ -56,7 +56,7 @@ Covers `generateSlug()`, `isValidSlug()`, `isValidUrl()`, and `RESERVED_SLUGS`. 
 |---|---|
 | `DATABASE_URL` | Neon pooled connection string |
 | `DIRECT_URL` | Neon direct/unpooled connection string (for migrations) |
-| `NEXT_PUBLIC_BASE_URL` | Public base URL, e.g. `https://your-app.vercel.app` |
+| `NEXT_PUBLIC_BASE_URL` | Public base URL, e.g. `https://snip.vercel.app` |
 
 ---
 
